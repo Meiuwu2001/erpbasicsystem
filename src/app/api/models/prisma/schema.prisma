@@ -1,0 +1,82 @@
+//prisma/schema.prisma
+
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+model usuarios {
+    usuario_id         Int                  @id @default(autoincrement())
+    nombre             String
+    apellidos          String
+    email              String               @unique
+    contrasenia        String
+    rol                rol
+    ordenes_produccion ordenes_produccion[]
+}
+
+enum rol {
+    Administrador
+    Supervisor
+    Operador
+    Almacen
+}
+
+model ordenes_produccion {
+    orden_id           Int             @id @default(autoincrement())
+    fecha_inicio       DateTime
+    fecha_fin          DateTime
+    estado             estado
+    cantidad_producida Int
+    materia_id         Int
+    productos          materias_primas @relation(fields: [materia_id], references: [materia_id])
+    responsable_id     Int
+    usuarios           usuarios        @relation(fields: [responsable_id], references: [usuario_id])
+}
+
+enum estado {
+    En_proceso
+    Completado
+    Cancelado
+}
+
+model inventario {
+    inventario_id Int             @id @default(autoincrement())
+    materia_id    Int
+    productos     materias_primas @relation(fields: [materia_id], references: [materia_id])
+    cantidad      Int
+}
+
+model materias_primas {
+    materia_id          Int                  @id @default(autoincrement())
+    nombre              String
+    descripcion         String
+    unidad_medida       unidad_medida
+    cantidad_disponible Decimal
+    costo_unitario      Float
+    provedor_id         Int
+    proveedores         proveedores          @relation(fields: [provedor_id], references: [proveedor_id])
+    ordenes_produccion  ordenes_produccion[]
+    inventario          inventario[]
+}
+
+enum unidad_medida {
+    Kg
+    M
+    piezas
+    Litros
+}
+
+model proveedores {
+    proveedor_id    Int               @id @default(autoincrement())
+    nombre_empresa  String
+    contacto        String
+    telefono        String
+    email           String
+    direccion       String
+    materias_primas materias_primas[]
+}
