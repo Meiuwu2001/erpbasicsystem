@@ -10,73 +10,119 @@ datasource db {
 }
 
 model usuarios {
-    usuario_id         Int                  @id @default(autoincrement())
-    nombre             String
-    apellidos          String
-    email              String               @unique
-    contrasenia        String
-    rol                rol
-    ordenes_produccion ordenes_produccion[]
+    usuario_id             Int                      @id @default(autoincrement())
+    nombre                 String
+    apellidos              String
+    email                  String                   @unique
+    contrasenia            String
+    rol                    rol
+    ordenes_produccion     ordenes_produccion[]
+    movimientos_inventario movimientos_inventario[]
 }
 
 enum rol {
-    Administrador
-    Supervisor
-    Operador
-    Almacen
+    ADMINISTRADOR
+    SUPERVISOR
+    OPERADOR
+    ALMACEN
 }
 
 model ordenes_produccion {
-    orden_id           Int             @id @default(autoincrement())
+    orden_id           Int                           @id @default(autoincrement())
     fecha_inicio       DateTime
     fecha_fin          DateTime
     estado             estado
     cantidad_producida Int
     materia_id         Int
-    productos          materias_primas @relation(fields: [materia_id], references: [materia_id])
+    productos          materias_primas               @relation(fields: [materia_id], references: [materia_id])
     responsable_id     Int
-    usuarios           usuarios        @relation(fields: [responsable_id], references: [usuario_id])
+    usuarios           usuarios                      @relation(fields: [responsable_id], references: [usuario_id])
+    detalles_ordenes   detalles_ordenes_produccion[]
 }
 
 enum estado {
-    En_proceso
-    Completado
-    Cancelado
+    EN_PROCESO
+    COMPLETADO
+    CANCELADO
 }
 
 model inventario {
-    inventario_id Int             @id @default(autoincrement())
-    materia_id    Int
-    productos     materias_primas @relation(fields: [materia_id], references: [materia_id])
-    cantidad      Int
+    inventario_id          Int                      @id @default(autoincrement())
+    materia_id             Int
+    productos              materias_primas          @relation(fields: [materia_id], references: [materia_id])
+    cantidad               Int
+    stock_minimo           Int // Nuevo campo para control de stock bajo
+    stock_maximo           Int // Nuevo campo para control de stock alto
+    movimientos_inventario movimientos_inventario[]
+    lotes                  lotes[]
 }
 
 model materias_primas {
-    materia_id          Int                  @id @default(autoincrement())
-    nombre              String
-    descripcion         String
-    unidad_medida       unidad_medida
-    cantidad_disponible Decimal
-    costo_unitario      Float
-    provedor_id         Int
-    proveedores         proveedores          @relation(fields: [provedor_id], references: [proveedor_id])
-    ordenes_produccion  ordenes_produccion[]
-    inventario          inventario[]
+    materia_id                  Int                           @id @default(autoincrement())
+    nombre                      String
+    descripcion                 String
+    unidad_medida               unidad_medida
+    cantidad_disponible         Decimal
+    costo_unitario              Float
+    provedor_id                 Int
+    proveedores                 proveedores                   @relation(fields: [provedor_id], references: [proveedor_id])
+    ordenes_produccion          ordenes_produccion[]
+    inventario                  inventario[]
+    detalles_ordenes_produccion detalles_ordenes_produccion[]
 }
 
 enum unidad_medida {
-    Kg
+    KG
     M
-    piezas
-    Litros
+    PIEZAS
+    L
 }
 
 model proveedores {
-    proveedor_id    Int               @id @default(autoincrement())
-    nombre_empresa  String
-    contacto        String
-    telefono        String
-    email           String
-    direccion       String
-    materias_primas materias_primas[]
+    proveedor_id        Int               @id @default(autoincrement())
+    nombre_empresa      String
+    contacto            String
+    telefono            String
+    email               String
+    direccion           String
+    tiempo_entrega_dias Int // Nuevo campo
+    condiciones_pago    String // Nuevo campo
+    materias_primas     materias_primas[]
+}
+
+model detalles_ordenes_produccion {
+    detalle_id     Int                @id @default(autoincrement())
+    orden_id       Int
+    ordenes        ordenes_produccion @relation(fields: [orden_id], references: [orden_id])
+    materia_id     Int
+    productos      materias_primas    @relation(fields: [materia_id], references: [materia_id])
+    cantidad       Int
+    costo_unitario Float
+    total          Float
+}
+
+model movimientos_inventario {
+    movimiento_id       Int             @id @default(autoincrement())
+    inventario_id       Int
+    inventario          inventario      @relation(fields: [inventario_id], references: [inventario_id])
+    tipo_movimiento     tipo_movimiento
+    cantidad            Int
+    fecha_movimiento    DateTime        @default(now())
+    referencia          String
+    usuario_responsable Int
+    usuarios            usuarios        @relation(fields: [usuario_responsable], references: [usuario_id])
+}
+
+enum tipo_movimiento {
+    ENTRADA
+    SALIDA
+    AJUSTE
+}
+
+model lotes {
+    lote_id         Int        @id @default(autoincrement())
+    inventario_id   Int
+    inventario      inventario @relation(fields: [inventario_id], references: [inventario_id])
+    fecha_caducidad DateTime
+    cantidad        Int
 }
