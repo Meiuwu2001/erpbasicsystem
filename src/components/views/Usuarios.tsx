@@ -76,7 +76,10 @@ export default function Usuarios() {
         <p>¿Estás seguro de que deseas eliminar este usuario?</p>
         <div className="flex gap-2">
           <button
-            onClick={() => confirmDelete(id)}
+            onClick={() => {
+              confirmDelete(id);
+              toast.dismiss(); // Cerramos el toast después de confirmar
+            }}
             className="bg-red-500 px-3 py-1 rounded text-white"
           >
             Confirmar
@@ -134,7 +137,14 @@ export default function Usuarios() {
       }
     } catch (error) {
       console.error(error);
-      alert("Hubo un problema al intentar eliminar el usuario.");
+      showToast.error("¡Hubo un problema al eliminar el usuario!", {
+        duration: 4000,
+        progress: true,
+        position: "top-right",
+        transition: "bounceIn",
+        icon: "",
+        sound: true,
+      });
     }
     fetchUsuarios();
   };
@@ -225,7 +235,7 @@ export default function Usuarios() {
         <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
-            placeholder="Buscar por nombre, email..."
+            placeholder="Buscar..."
             onChange={(e) => setSearch(e.target.value)}
             className="border rounded-md px-3 py-2 text-black w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-[#E96D39]"
           />

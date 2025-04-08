@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         direccion: data.direccion,
         telefono: data.telefono,
         email: data.email,
-        tiempo_entrega_dias: data.tiempo_entrega_dias,
+        tiempo_entrega_dias: parseInt(data.tiempo_entrega_dias, 10), // Convierte a entero
         contacto: data.contacto,
         condiciones_pago: data.condiciones_pago,
       },
@@ -60,7 +60,7 @@ export async function PUT(req: NextRequest) {
         direccion: data.direccion,
         telefono: data.telefono,
         email: data.email,
-        tiempo_entrega_dias: data.tiempo_entrega_dias,
+        tiempo_entrega_dias: parseInt(data.tiempo_entrega_dias, 10), // Convierte a entero
         contacto: data.contacto,
         condiciones_pago: data.condiciones_pago,
       },
@@ -74,11 +74,17 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
   try {
-    const { proveedor_id } = await req.json();
+    const proveedor_id = req.nextUrl.searchParams.get("proveedor_id");
+    if (!proveedor_id) {
+      return NextResponse.json(
+        { error: "Falta el proveedor_id" },
+        { status: 400 }
+      );
+    }
     const proveedorEliminado = await prisma.proveedores.delete({
-      where: { proveedor_id },
+      where: { proveedor_id: Number(proveedor_id) },
     });
     return NextResponse.json(proveedorEliminado, { status: 200 });
   } catch (error) {
