@@ -148,7 +148,7 @@ export default function Proveedores() {
       console.log("Actualizar:", nuevoProveedor);
       try {
         fetch(
-          `/api/crud/proveedores?usuario_id=${proveedorParaEditar.proveedor_id}`,
+          `/api/crud/proveedores?proveedor_id=${proveedorParaEditar.proveedor_id}`,
           {
             method: "PUT",
             headers: {
@@ -264,8 +264,8 @@ export default function Proveedores() {
               <tr>
                 {(
                   [
-                    "Nombre ",
-                    "Contacto",
+                    "nombre",
+                    "contacto",
                     "telefono",
                     "email",
                     "dirección",

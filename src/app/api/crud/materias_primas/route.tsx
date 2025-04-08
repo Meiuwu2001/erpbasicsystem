@@ -13,8 +13,14 @@ export async function GET() {
         cantidad_disponible: true,
         costo_unitario: true,
         provedor_id: true,
+        proveedores: {
+          select: {
+            nombre_empresa: true,
+          },
+        },
       },
     });
+
     return NextResponse.json(materiasPrimas, { status: 200 });
   } catch (error) {
     console.error(error);
@@ -32,9 +38,9 @@ export async function POST(req: NextRequest) {
         nombre: data.nombre,
         descripcion: data.descripcion,
         unidad_medida: data.unidad_medida,
-        cantidad_disponible: data.cantidad_disponible,
-        costo_unitario: data.costo_unitario,
-        provedor_id: data.provedor_id,
+        cantidad_disponible: parseFloat(data.cantidad_disponible),
+        costo_unitario: parseFloat(data.costo_unitario),
+        provedor_id: parseInt(data.provedor_id),
       },
     });
     return NextResponse.json(nuevaMateriaPrima, { status: 201 });
@@ -56,9 +62,9 @@ export async function PUT(req: NextRequest) {
         nombre: data.nombre,
         descripcion: data.descripcion,
         unidad_medida: data.unidad_medida,
-        cantidad_disponible: data.cantidad_disponible,
-        costo_unitario: data.costo_unitario,
-        provedor_id: data.provedor_id,
+        cantidad_disponible: parseFloat(data.cantidad_disponible),
+        costo_unitario: parseFloat(data.costo_unitario),
+        provedor_id: parseInt(data.provedor_id),
       },
     });
     return NextResponse.json(materiaPrimaActualizada, { status: 200 });
@@ -70,7 +76,7 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
   try {
     const materia_id = req.nextUrl.searchParams.get("materia_id");
 
