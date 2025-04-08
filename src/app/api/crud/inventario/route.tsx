@@ -29,13 +29,10 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const nuevoInventario = await prisma.inventario.create({
       data: {
-        materia_id: data.materia_id,
-        productos: data.productos,
-        cantidad: data.cantidad,
-        stock_minimo: data.stock_minimo,
-        stock_maximo: data.stock_maximo,
-        movimientos_inventario: data.movimientos_inventario,
-        lotes: data.lotes,
+        materia_id: parseInt(data.materia_id),
+        cantidad: parseInt(data.cantidad),
+        stock_minimo: parseInt(data.stock_minimo),
+        stock_maximo: parseInt(data.stock_maximo),
       },
     });
     return NextResponse.json(nuevoInventario, { status: 201 });
@@ -54,13 +51,10 @@ export async function PUT(req: NextRequest) {
     const inventarioActualizado = await prisma.inventario.update({
       where: { inventario_id },
       data: {
-        materia_id: data.materia_id,
-        productos: data.productos,
-        cantidad: data.cantidad,
-        stock_minimo: data.stock_minimo,
-        stock_maximo: data.stock_maximo,
-        movimientos_inventario: data.movimientos_inventario,
-        lotes: data.lotes,
+        materia_id: parseInt(data.materia_id),
+        cantidad: parseInt(data.cantidad),
+        stock_minimo: parseInt(data.stock_minimo),
+        stock_maximo: parseInt(data.stock_maximo),
       },
     });
     return NextResponse.json(inventarioActualizado, { status: 200 });
@@ -72,12 +66,12 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
   try {
-    const { inventario_id } = await req.json();
+    const inventario_id = req.nextUrl.searchParams.get("inventario_id");
 
     const inventarioEliminado = await prisma.inventario.delete({
-      where: { inventario_id },
+      where: { inventario_id: Number(inventario_id) },
     });
     return NextResponse.json(inventarioEliminado, { status: 200 });
   } catch (error) {
