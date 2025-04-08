@@ -8,6 +8,7 @@ export async function GET() {
     const lotes = await prisma.lotes.findMany({
       select: {
         lote_id: true,
+        codigo: true,
         inventario_id: true,
         fecha_caducidad: true,
         cantidad: true,
@@ -27,9 +28,10 @@ export async function POST(req: NextRequest) {
     const data = await req.json();
     const nuevoLote = await prisma.lotes.create({
       data: {
-        inventario_id: data.inventario_id,
+        codigo: data.codigo, // Removed as it does not exist in the schema
+        inventario_id: parseInt(data.inventario_id),
         fecha_caducidad: data.fecha_caducidad,
-        cantidad: data.cantidad,
+        cantidad: parseInt(data.cantidad),
       },
     });
     return NextResponse.json(nuevoLote, { status: 201 });
@@ -62,12 +64,12 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
   try {
-    const { lote_id } = await req.json();
+    const lote_id = req.nextUrl.searchParams.get("lote_id");
 
     const loteEliminado = await prisma.lotes.delete({
-      where: { lote_id },
+      where: { lote_id: Number(lote_id) },
     });
     return NextResponse.json(loteEliminado, { status: 200 });
   } catch (error) {

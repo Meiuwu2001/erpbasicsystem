@@ -1,6 +1,9 @@
+import { movimientos_inventario } from "@prisma/client";
 import {
+  Activity,
   ChevronDown,
   ChevronUp,
+  List,
   Pencil,
   Plus,
   RefreshCcw,
@@ -16,7 +19,9 @@ interface Inventario {
   cantidad: number;
   stock_minimo: number;
   stock_maximo: number;
-  productos: MateriasPrimas;
+  productos?: MateriasPrimas;
+  movimientos_inventario?: MovimientosInventario;
+  lotes?: Lotes;
 }
 interface MateriasPrimas {
   materia_id?: number;
@@ -27,6 +32,32 @@ interface MateriasPrimas {
   costo_unitario: number;
   provedor_id?: number;
 }
+interface Lotes {
+  lote_id?: number;
+  codigo?: string;
+  inventario_id?: number;
+  fecha_caducidad?: Date;
+  cantidad?: number;
+}
+interface MovimientosInventario {
+  movimiento_id?: number;
+  inventario_id?: number;
+  tipo_movimiento: string;
+  cantidad: number;
+  fecha_movimiento: Date;
+  referencia: string;
+  usuario_responsable: number;
+  usuarios?: Usuario;
+}
+interface Usuario {
+  usuario_id?: number;
+  nombre: string;
+  apellidos: string;
+  email: string;
+  contrasenia: string;
+  rol: string;
+}
+
 type SortKey = keyof Omit<Inventario, "inventario_id">;
 
 export default function Inventario() {
@@ -36,6 +67,9 @@ export default function Inventario() {
   const [sortAsc, setSortAsc] = useState(true);
   const [search, setSearch] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showLotesModal, setShowLotesModal] = useState(false);
+  const [showMovimientosModal, setShowMovimientosModal] = useState(false);
+
   const [inventarioToEdit, setInventarioToEdit] = useState<Inventario | null>(
     null
   );
@@ -68,6 +102,14 @@ export default function Inventario() {
   const handleEdit = (inventario: Inventario) => {
     setInventarioToEdit(inventario);
     setShowAddModal(true);
+  };
+  const verLotes = (inventario: Inventario) => {
+    setInventarioToEdit(inventario);
+    setShowLotesModal(true);
+  };
+  const verMovimientos = (inventario: Inventario) => {
+    setInventarioToEdit(inventario);
+    setShowMovimientosModal(true);
   };
   const handleDelete = async (id?: number) => {
     if (!id) return;
@@ -104,7 +146,6 @@ export default function Inventario() {
       }
     );
   };
-
   const confirmDelete = async (id?: number) => {
     if (!id) return;
 
@@ -295,7 +336,7 @@ export default function Inventario() {
                   className="border-b hover:bg-[#E96D39]/10 transition-all"
                 >
                   <td className="py-2 px-4 text-black">
-                    {inventario.productos.nombre}
+                    {inventario.productos?.nombre}
                   </td>
                   <td className="py-2 px-4 text-black">
                     {inventario.cantidad}
@@ -320,6 +361,18 @@ export default function Inventario() {
                         className="bg-red-500 p-2 rounded hover:bg-red-700 text-white transition"
                       >
                         <Trash2 className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => verLotes(inventario)}
+                        className="bg-sky-500 p-2 rounded hover:bg-sky-700 text-white transition"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => verMovimientos(inventario)}
+                        className="bg-green-500 p-2 rounded hover:bg-green-700 text-white transition"
+                      >
+                        <Activity className="w-4 h-4" />
                       </button>
                     </div>
                   </td>
@@ -348,6 +401,26 @@ export default function Inventario() {
           inventario={inventarioToEdit}
         />
       )}
+      {showLotesModal && (
+        <LotesModal
+          show={showLotesModal}
+          onClose={() => {
+            setShowLotesModal(false);
+            setInventarioToEdit(null);
+          }}
+          inventario={inventarioToEdit}
+        />
+      )}
+      {showMovimientosModal && (
+        <MovimientosModal
+          show={showMovimientosModal}
+          onClose={() => {
+            setShowMovimientosModal(false);
+            setInventarioToEdit(null);
+          }}
+          inventario={inventarioToEdit}
+        />
+      )}
     </div>
   );
 }
@@ -368,15 +441,6 @@ function InventarioModal({
     cantidad: inventario?.cantidad || 0,
     stock_minimo: inventario?.stock_minimo || 0,
     stock_maximo: inventario?.stock_maximo || 0,
-    productos: inventario?.productos || {
-      materia_id: 0,
-      nombre: "",
-      descripcion: "",
-      unidad_medida: "",
-      cantidad_disponible: 0,
-      costo_unitario: 0,
-      provedor_id: 0,
-    },
   });
 
   const [materiasPrimas, setMateriasPrimas] = useState<MateriasPrimas[]>([]);
@@ -464,6 +528,406 @@ function InventarioModal({
             className="px-4 py-2 bg-[#E96D39] text-white rounded hover:bg-[#9E4A27]"
           >
             Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+function LotesModal({
+  show,
+  onClose,
+  inventario,
+  onAddLote,
+}: {
+  show: boolean;
+  onClose: () => void;
+  inventario: Inventario | null;
+  onAddLote?: (nuevoLote: Lotes) => void;
+}) {
+  const [nuevoLote, setNuevoLote] = useState<Lotes>({
+    inventario_id: inventario?.inventario_id ?? 0,
+    codigo: "",
+    cantidad: 0,
+    fecha_caducidad: undefined,
+  });
+
+  if (!show || !inventario) return null;
+
+  const lotes: Lotes[] = Array.isArray(inventario.lotes)
+    ? inventario.lotes
+    : [];
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setNuevoLote((prev) => ({
+      ...prev,
+      [name]: name === "cantidad" ? Number(value) : value,
+    }));
+  };
+
+  const handleAddLote = async () => {
+    try {
+      const formattedLote = {
+        ...nuevoLote,
+        fecha_caducidad: nuevoLote.fecha_caducidad
+          ? new Date(nuevoLote.fecha_caducidad).toISOString()
+          : null,
+      };
+
+      const response = await fetch("/api/crud/lotes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formattedLote),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Error al añadir lote");
+      }
+
+      console.log("Lote añadido:", data);
+
+      // Limpiar formulario
+      setNuevoLote({
+        inventario_id: inventario.inventario_id,
+        cantidad: 0,
+        fecha_caducidad: undefined,
+      });
+
+      if (onAddLote) {
+        onAddLote(data);
+      }
+    } catch (error) {
+      console.error("Error al añadir lote:", error);
+      alert("Hubo un error al guardar el lote.");
+    }
+  };
+  const handleDeleteLote = async (loteId: number) => {
+    try {
+      // Llamada a la API para eliminar el lote
+      await fetch(`/api/crud/lotes?lote_id=${loteId}`, {
+        method: "DELETE",
+      });
+    } catch (error) {
+      console.error("Error al eliminar el lote", error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg">
+        <h2 className="text-xl font-bold mb-4 text-black">
+          Lotes del Inventario
+        </h2>
+
+        <div className="space-y-4 max-h-60 overflow-y-auto text-black">
+          {lotes.length === 0 ? (
+            <p className="text-gray-500">No hay lotes disponibles.</p>
+          ) : (
+            lotes.map((lote, index) => (
+              <div
+                key={lote.lote_id ?? index}
+                className="border rounded p-3 bg-gray-50 shadow-sm"
+              >
+                <p>
+                  <strong>Código:</strong> {lote.codigo}
+                </p>
+                <p>
+                  <strong>Cantidad:</strong> {lote.cantidad}
+                </p>
+                <p>
+                  <strong>Fecha de Caducidad:</strong>{" "}
+                  {lote.fecha_caducidad
+                    ? new Date(lote.fecha_caducidad).toLocaleDateString()
+                    : "Sin fecha"}
+                </p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => handleDeleteLote(lote.lote_id ?? 0)}
+                    className="bg-red-500 p-2 rounded hover:bg-red-700 text-white transition"
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6 text-black">
+          Añadir Nuevo Lote
+        </h3>
+        <div className="mt-2 space-y-3 text-black">
+          <input
+            type="number"
+            name="cantidad"
+            value={nuevoLote.cantidad}
+            onChange={handleChange}
+            placeholder="Cantidad"
+            className="w-full border px-3 py-2 rounded"
+          />
+          <input
+            type="text"
+            name="codigo"
+            value={nuevoLote.codigo}
+            onChange={handleChange}
+            placeholder="Codigo"
+            className="w-full border px-3 py-2 rounded"
+          />
+          <input
+            type="date"
+            name="fecha_caducidad"
+            value={
+              nuevoLote.fecha_caducidad
+                ? new Date(nuevoLote.fecha_caducidad)
+                    .toISOString()
+                    .split("T")[0]
+                : ""
+            }
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded"
+          />
+          <button
+            onClick={handleAddLote}
+            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+          >
+            Guardar Lote
+          </button>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded text-gray-700"
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+function MovimientosModal({
+  show,
+  onClose,
+  inventario,
+  onAddMovimiento,
+}: {
+  show: boolean;
+  onClose: () => void;
+  inventario: Inventario | null;
+  onAddMovimiento?: (nuevoMovimiento: movimientos_inventario) => void;
+}) {
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+
+  useEffect(() => {
+    fetchUsuarios().then(setUsuarios).catch(console.error);
+  }, []);
+  async function fetchUsuarios(): Promise<Usuario[]> {
+    const res = await fetch("/api/crud/user");
+    if (!res.ok) throw new Error("Error al obtener proveedores");
+    return res.json();
+  }
+  const [nuevoMovimiento, setNuevoMovimiento] = useState<MovimientosInventario>(
+    {
+      inventario_id: inventario?.inventario_id ?? 0,
+      tipo_movimiento: "",
+      cantidad: 0,
+      fecha_movimiento: new Date(),
+      referencia: "",
+      usuario_responsable: 0,
+    }
+  );
+
+  if (!show || !inventario) return null;
+
+  const movimientos: MovimientosInventario[] = Array.isArray(
+    inventario.movimientos_inventario
+  )
+    ? inventario.movimientos_inventario
+    : [];
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setNuevoMovimiento((prev) => ({
+      ...prev,
+      [name]: name === "cantidad" ? Number(value) : value,
+    }));
+  };
+
+  const handleAddMovimiento = async () => {
+    try {
+      const formattedMovimiento = {
+        ...nuevoMovimiento,
+        fecha_movimiento: nuevoMovimiento.fecha_movimiento.toISOString(),
+      };
+
+      const response = await fetch("/api/crud/movimientos_inventario", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formattedMovimiento),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Error al añadir movimiento");
+      }
+
+      console.log("Movimiento añadido:", data);
+
+      // Limpiar formulario
+      setNuevoMovimiento({
+        inventario_id: inventario.inventario_id,
+        tipo_movimiento: "",
+        cantidad: 0,
+        fecha_movimiento: new Date(),
+        referencia: "",
+        usuario_responsable: 0,
+      });
+
+      if (onAddMovimiento) {
+        onAddMovimiento(data);
+      }
+    } catch (error) {
+      console.error("Error al añadir movimiento:", error);
+      alert("Hubo un error al guardar el movimiento.");
+    }
+  };
+  const handleDeleteMovimiento = async (movimientoId: number) => {
+    try {
+      // Llamada a la API para eliminar el movimiento
+      await fetch(
+        `/api/crud/movimientos_inventario?movimiento_id=${movimientoId}`,
+        {
+          method: "DELETE",
+        }
+      );
+    } catch (error) {
+      console.error("Error al eliminar el movimiento", error);
+    }
+  };
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg">
+        <h2 className="text-xl font-bold mb-4 text-black">
+          Movimientos del Inventario
+        </h2>
+
+        <div className="space-y-4 max-h-60 overflow-y-auto text-black">
+          {movimientos.length === 0 ? (
+            <p className="text-gray-500">No hay movimientos disponibles.</p>
+          ) : (
+            movimientos.map((movimiento, index) => (
+              <div
+                key={movimiento.movimiento_id ?? index}
+                className="border rounded p-3 bg-gray-50 shadow-sm"
+              >
+                <p>
+                  <strong>Tipo de Movimiento:</strong>{" "}
+                  {movimiento.tipo_movimiento}
+                </p>
+                <p>
+                  <strong>Cantidad:</strong> {movimiento.cantidad}
+                </p>
+                <p>
+                  <strong>Fecha:</strong>{" "}
+                  {new Date(movimiento.fecha_movimiento).toLocaleDateString()}
+                </p>
+                <p>
+                  <strong>Referencia:</strong> {movimiento.referencia}
+                </p>
+
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() =>
+                      handleDeleteMovimiento(movimiento.movimiento_id ?? 0)
+                    }
+                    className="bg-red-500 p-2 rounded hover:bg-red-700 text-white transition"
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6 text-black">
+          Añadir Nuevo Movimiento
+        </h3>
+        <div className="mt-2 space-y-3 text-black">
+          <input
+            type="number"
+            name="cantidad"
+            value={nuevoMovimiento.cantidad}
+            onChange={handleChange}
+            placeholder="Cantidad"
+            className="w-full border px-3 py-2 rounded"
+          />
+          <select
+            name="tipo_movimiento"
+            value={nuevoMovimiento.tipo_movimiento}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded text-black"
+          >
+            <option value="">Tipo Movimiento</option>
+            <option value="ENTRADA">Entrada</option>
+            <option value="SALIDA">Salida (M)</option>
+            <option value="AJUSTE">Ajuste</option>
+          </select>
+          <input
+            type="date"
+            name="fecha_movimiento"
+            value={nuevoMovimiento.fecha_movimiento.toISOString().split("T")[0]}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded"
+          />
+          <input
+            type="text"
+            name="referencia"
+            value={nuevoMovimiento.referencia}
+            onChange={handleChange}
+            placeholder="Referencia"
+            className="w-full border px-3 py-2 rounded"
+          />
+          <select
+            name="usuario_responsable"
+            value={nuevoMovimiento.usuario_responsable}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded text-black"
+          >
+            <option value="">Selecciona un responsable</option>
+            {usuarios.map((p) => (
+              <option key={p.usuario_id} value={p.usuario_id}>
+                {p.nombre} {p.apellidos}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleAddMovimiento}
+            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+          >
+            Guardar Movimiento
+          </button>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded text-gray-700"
+          >
+            Cerrar
           </button>
         </div>
       </div>

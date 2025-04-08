@@ -31,12 +31,12 @@ export async function POST(req: NextRequest) {
     const nuevoMovimientoInventario =
       await prisma.movimientos_inventario.create({
         data: {
-          inventario_id: data.inventario_id,
+          inventario_id: parseInt(data.inventario_id),
           tipo_movimiento: data.tipo_movimiento,
-          cantidad: data.cantidad,
+          cantidad: parseInt(data.cantidad),
           fecha_movimiento: data.fecha_movimiento,
           referencia: data.referencia,
-          usuario_responsable: data.usuario_responsable,
+          usuario_responsable: parseInt(data.usuario_responsable),
         },
       });
     return NextResponse.json(nuevoMovimientoInventario, { status: 201 });
@@ -73,13 +73,13 @@ export async function PUT(req: NextRequest) {
     );
   }
 }
-export async function DELETE(req: NextRequest) {
+export async function DELETE(req: NextRequest): Promise<NextResponse> {
   try {
-    const { movimiento_id } = await req.json();
+    const movimiento_id = req.nextUrl.searchParams.get("movimiento_id");
 
     const movimientoInventarioEliminado =
       await prisma.movimientos_inventario.delete({
-        where: { movimiento_id },
+        where: { movimiento_id: Number(movimiento_id) },
       });
     return NextResponse.json(movimientoInventarioEliminado, { status: 200 });
   } catch (error) {

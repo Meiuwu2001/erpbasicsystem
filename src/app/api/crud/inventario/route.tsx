@@ -13,6 +13,8 @@ export async function GET() {
         cantidad: true,
         stock_minimo: true,
         stock_maximo: true,
+        movimientos_inventario: true,
+        lotes: true,
       },
     });
     return NextResponse.json(inventarios, { status: 200 });

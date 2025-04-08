@@ -7,13 +7,10 @@ import SidebarMenu from "@/components/navigation/sideBar";
 // Importar vistas
 import OrdenesProduccion from "@/components/views/OrdenesProduccion";
 import DetallesOrdenes from "@/components/views/DetallesOrdenesProduccion";
-import Lotes from "@/components/views/Lotes";
 import Proveedores from "@/components/views/Proveedores";
 import Inventario from "@/components/views/Inventario";
 import Usuarios from "@/components/views/Usuarios";
-import MovimientosInventarios from "@/components/views/MovimientosInventarios";
 import MateriasPrimas from "@/components/views/MateriasPrimas";
-
 
 export default function Page() {
   const [selected, setSelected] = useState("Inicio");
@@ -26,15 +23,9 @@ export default function Page() {
       case "Detalles de Órdenes":
         console.log("Detalles de Órdenes");
         return <DetallesOrdenes />;
-      case "Lotes":
-        console.log("Lotes");
-        return <Lotes />;
       case "Proveedores":
         console.log("Proveedores");
         return <Proveedores />;
-      case "Movimientos de Inventario":
-        console.log("Movimientos de Inventario");
-        return <MovimientosInventarios />;
       case "Materias Primas":
         console.log("Materias Primas");
         return <MateriasPrimas />;

@@ -7,11 +7,11 @@ const prisma = new PrismaClient();
 export async function POST(req: NextRequest) {
   const { nombre, apellidos, email, contrasenia, rol } = await req.json();
 
-  const authorizationHeader = req.headers.get('Authorization');
+  // const authorizationHeader = req.headers.get('Authorization');
 
-  if (!authorizationHeader) {
-    return NextResponse.json({ error: 'No se proporcionó el encabezado Authorization' }, { status: 400 });
-  }
+  // if (!authorizationHeader) {
+  //   return NextResponse.json({ error: 'No se proporcionó el encabezado Authorization' }, { status: 400 });
+  // }
   try {
     const hashedPassword = await bcrypt.hash(contrasenia, 10);
 

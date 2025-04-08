@@ -121,6 +121,7 @@ enum tipo_movimiento {
 
 model lotes {
     lote_id         Int        @id @default(autoincrement())
+    codigo          String        @unique
     inventario_id   Int
     inventario      inventario @relation(fields: [inventario_id], references: [inventario_id])
     fecha_caducidad DateTime
