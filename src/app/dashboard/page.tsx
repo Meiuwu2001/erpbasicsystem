@@ -6,7 +6,6 @@ import SidebarMenu from "@/components/navigation/sideBar";
 
 // Importar vistas
 import OrdenesProduccion from "@/components/views/OrdenesProduccion";
-import DetallesOrdenes from "@/components/views/DetallesOrdenesProduccion";
 import Proveedores from "@/components/views/Proveedores";
 import Inventario from "@/components/views/Inventario";
 import Usuarios from "@/components/views/Usuarios";
@@ -20,9 +19,6 @@ export default function Page() {
       case "Órdenes en Producción":
         console.log("Órdenes en Producción");
         return <OrdenesProduccion />;
-      case "Detalles de Órdenes":
-        console.log("Detalles de Órdenes");
-        return <DetallesOrdenes />;
       case "Proveedores":
         console.log("Proveedores");
         return <Proveedores />;

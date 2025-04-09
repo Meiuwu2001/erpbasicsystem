@@ -15,6 +15,7 @@ export async function GET() {
         materia_id: true,
         productos: true,
         responsable_id: true,
+        usuarios: true,
       },
     });
     return NextResponse.json(ordenesProduccion, { status: 200 });
@@ -29,17 +30,40 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
+
+    const materia = await prisma.materias_primas.findUnique({
+      where: { materia_id: parseInt(data.materia_id) },
+    });
+
+    if (!materia) {
+      return NextResponse.json(
+        { error: "La materia prima no existe." },
+        { status: 400 }
+      );
+    }
+
+    const usuario = await prisma.usuarios.findUnique({
+      where: { usuario_id: parseInt(data.responsable_id) },
+    });
+
+    if (!usuario) {
+      return NextResponse.json(
+        { error: "El responsable (usuario) no existe." },
+        { status: 400 }
+      );
+    }
+
     const nuevaOrdenProduccion = await prisma.ordenes_produccion.create({
       data: {
-        fecha_inicio: data.fecha_inicio,
-        fecha_fin: data.fecha_fin,
+        fecha_inicio: new Date(data.fecha_inicio),
+        fecha_fin: new Date(data.fecha_fin),
         estado: data.estado,
-        cantidad_producida: data.cantidad_producida,
-        materia_id: data.materia_id,
-        productos: data.productos,
-        responsable_id: data.responsable_id,
+        cantidad_producida: parseInt(data.cantidad_producida),
+        materia_id: parseInt(data.materia_id),
+        responsable_id: parseInt(data.responsable_id),
       },
     });
+
     return NextResponse.json(nuevaOrdenProduccion, { status: 201 });
   } catch (error) {
     console.error(error);
@@ -49,6 +73,7 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
 export async function PUT(req: NextRequest) {
   try {
     const { orden_id, ...data } = await req.json();

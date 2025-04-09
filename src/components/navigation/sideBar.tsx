@@ -11,7 +11,6 @@ interface SidebarProps {
 const menuItems = [
   "Inicio",
   "Órdenes en Producción",
-  "Detalles de Órdenes",
   "Proveedores",
   "Materias Primas",
   "Inventario",
