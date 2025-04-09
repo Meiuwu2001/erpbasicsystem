@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -118,16 +118,6 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     return new NextResponse(null, { status: 204 });
   } catch (error: unknown) {
     console.error(error);
-
-    // Verificamos si el error es una instancia de PrismaClientKnownRequestError
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { error: "Usuario no encontrado" },
-          { status: 404 }
-        );
-      }
-    }
 
     return NextResponse.json(
       { error: "Error al eliminar el usuario" },
