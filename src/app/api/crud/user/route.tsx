@@ -24,36 +24,36 @@ export async function GET() {
     );
   }
 }
-export async function GET_ONE(req: NextRequest) {
-  const usuario_id = req.nextUrl.searchParams.get("usuario_id");
-  try {
-    const user = await prisma.usuarios.findUnique({
-      where: { usuario_id: Number(usuario_id) },
-      select: {
-        usuario_id: true,
-        nombre: true,
-        apellidos: true,
-        email: true,
-        rol: true,
-      },
-    });
+// export async function GET_ONE(req: NextRequest) {
+//   const usuario_id = req.nextUrl.searchParams.get("usuario_id");
+//   try {
+//     const user = await prisma.usuarios.findUnique({
+//       where: { usuario_id: Number(usuario_id) },
+//       select: {
+//         usuario_id: true,
+//         nombre: true,
+//         apellidos: true,
+//         email: true,
+//         rol: true,
+//       },
+//     });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
+//     if (!user) {
+//       return NextResponse.json(
+//         { error: "Usuario no encontrado" },
+//         { status: 404 }
+//       );
+//     }
 
-    return NextResponse.json(user, { status: 200 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Error al obtener el usuario" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json(user, { status: 200 });
+//   } catch (error) {
+//     console.error(error);
+//     return NextResponse.json(
+//       { error: "Error al obtener el usuario" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 export async function PUT(req: NextRequest) {
   const { email, contrasenia, nombre, apellidos, rol } = await req.json();
