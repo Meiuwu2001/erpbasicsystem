@@ -16,6 +16,7 @@ export async function GET() {
         productos: true,
         responsable_id: true,
         usuarios: true,
+        detalles_ordenes: true
       },
     });
     return NextResponse.json(ordenesProduccion, { status: 200 });

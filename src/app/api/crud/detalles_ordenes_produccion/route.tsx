@@ -28,14 +28,15 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const data = await req.json();
+    const total = parseFloat(data.costo_unitario) * parseInt(data.cantidad);
     const nuevoDetalleOrdenProduccion =
       await prisma.detalles_ordenes_produccion.create({
         data: {
-          orden_id: data.orden_id,
-          materia_id: data.materia_id,
-          costo_unitario: data.costo_unitario,
-          total: data.total,
-          cantidad: data.cantidad,
+          orden_id: parseInt(data.orden_id),
+          materia_id: parseInt(data.materia_id),
+          costo_unitario: parseFloat(data.costo_unitario),
+          cantidad: parseInt(data.cantidad),
+          total: total,
         },
       });
     return NextResponse.json(nuevoDetalleOrdenProduccion, { status: 201 });
@@ -50,16 +51,17 @@ export async function POST(req: NextRequest) {
 export async function PUT(req: NextRequest) {
   try {
     const { detalle_id, ...data } = await req.json();
+    const total = parseFloat(data.costo_unitario) * parseInt(data.cantidad);
 
     const detalleOrdenProduccionActualizado =
       await prisma.detalles_ordenes_produccion.update({
         where: { detalle_id },
         data: {
-          orden_id: data.orden_id,
-          materia_id: data.materia_id,
-          costo_unitario: data.costo_unitario,
-          total: data.total,
-          cantidad: data.cantidad,
+          orden_id: parseInt(data.orden_id),
+          materia_id: parseInt(data.materia_id),
+          costo_unitario: parseFloat(data.costo_unitario),
+          cantidad: parseInt(data.cantidad),
+          total: total,
         },
       });
     return NextResponse.json(detalleOrdenProduccionActualizado, {
@@ -75,10 +77,10 @@ export async function PUT(req: NextRequest) {
 }
 export async function DELETE(req: NextRequest) {
   try {
-    const { detalle_id } = await req.json();
+    const detalle_id = req.nextUrl.searchParams.get("detalle_id");
 
     await prisma.detalles_ordenes_produccion.delete({
-      where: { detalle_id },
+      where: { detalle_id: Number(detalle_id) },
     });
     return NextResponse.json(
       { message: "Detalle de orden de producción eliminado" },

@@ -1,6 +1,7 @@
 import {
   ChevronDown,
   ChevronUp,
+  List,
   Pencil,
   Plus,
   RefreshCcw,
@@ -20,6 +21,7 @@ interface OrdenesProduccion {
   productos?: MateriasPrimas;
   responsable_id: number;
   usuarios?: Usuario;
+  detalles_ordenes?: DetallesOrden;
 }
 interface MateriasPrimas {
   materia_id?: number;
@@ -38,6 +40,14 @@ interface Usuario {
   contrasenia: string;
   rol: string;
 }
+interface DetallesOrden {
+  detalle_id?: number;
+  orden_id?: number;
+  materia_id?: number;
+  costo_unitario: number;
+  cantidad: number;
+  total?: number;
+}
 type SortKey = keyof Omit<OrdenesProduccion, "orden_id">;
 
 export default function OrdenesProduccion() {
@@ -52,6 +62,7 @@ export default function OrdenesProduccion() {
   const [ordenesToEdit, setOrdenesToEdit] = useState<OrdenesProduccion | null>(
     null
   );
+  const [showDetalles, setShowDetalles] = useState(false);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -81,6 +92,10 @@ export default function OrdenesProduccion() {
   const handleEdit = (ordenesProduccion: OrdenesProduccion) => {
     setOrdenesToEdit(ordenesProduccion);
     setShowAddModal(true);
+  };
+  const verDetalles = (ordenesProduccion: OrdenesProduccion) => {
+    setOrdenesToEdit(ordenesProduccion);
+    setShowDetalles(true);
   };
   const handleDelete = async (id?: number) => {
     if (!id) return;
@@ -352,6 +367,12 @@ export default function OrdenesProduccion() {
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
+                      <button
+                        onClick={() => verDetalles(orden)}
+                        className="bg-sky-500 p-2 rounded hover:bg-sky-700 text-white transition"
+                      >
+                        <List className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -374,6 +395,16 @@ export default function OrdenesProduccion() {
             setOrdenesToEdit(null);
           }}
           onSave={handleSave}
+          ordenes={ordenesToEdit}
+        />
+      )}
+      {showDetalles && (
+        <DetallesModal
+          show={showDetalles}
+          onClose={() => {
+            setShowDetalles(false);
+            setOrdenesToEdit(null);
+          }}
           ordenes={ordenesToEdit}
         />
       )}
@@ -545,6 +576,212 @@ function OrdenesModal({
             className="px-4 py-2 bg-[#E96D39] text-white rounded hover:bg-[#9E4A27]"
           >
             Guardar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+function DetallesModal({
+  show,
+  onClose,
+  ordenes,
+  onAddOrden,
+}: {
+  show: boolean;
+  onClose: () => void;
+  ordenes: OrdenesProduccion | null;
+  onAddOrden?: (nuevaOrden: DetallesOrden) => void;
+}) {
+  const [nuevaOrden, setNuevaOrden] = useState<DetallesOrden>({
+    orden_id: ordenes?.orden_id ?? 0,
+    materia_id: 0,
+    costo_unitario: 0,
+    cantidad: 0,
+    total: 0,
+  });
+  const [materiasPrimas, setMateriasPrimas] = useState<MateriasPrimas[]>([]);
+
+  useEffect(() => {
+    fetchMateriasPrimas().then(setMateriasPrimas).catch(console.error);
+  }, []);
+  async function fetchMateriasPrimas(): Promise<MateriasPrimas[]> {
+    const res = await fetch("/api/crud/materias_primas");
+    if (!res.ok) throw new Error("Error al obtener materias primas");
+    return res.json();
+  }
+  if (!show || !ordenes) return null;
+
+  const detalles: DetallesOrden[] = Array.isArray(ordenes.detalles_ordenes)
+    ? ordenes.detalles_ordenes
+    : [];
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    const numericValue = Number(value);
+
+    setNuevaOrden((prev) => {
+      const updated = {
+        ...prev,
+        [name]:
+          name === "materia_id" ||
+          name === "costo_unitario" ||
+          name === "cantidad"
+            ? numericValue
+            : value,
+      };
+      // Recalcular total
+      updated.total = updated.costo_unitario * updated.cantidad;
+      return updated;
+    });
+  };
+
+  const handleAddDetalle = async () => {
+    try {
+      const response = await fetch("/api/crud/detalles_ordenes_produccion", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(nuevaOrden),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Error al añadir detalle");
+      }
+
+      console.log("Detalle añadido:", data);
+
+      // Reset form
+      setNuevaOrden({
+        orden_id: ordenes.orden_id,
+        materia_id: 0,
+        costo_unitario: 0,
+        cantidad: 0,
+        total: 0,
+      });
+
+      if (onAddOrden) {
+        onAddOrden(data);
+      }
+    } catch (error) {
+      console.error("Error al añadir detalle:", error);
+      alert("Hubo un error al guardar el detalle.");
+    }
+  };
+
+  const handleDeleteDetalle = async (detalleId: number) => {
+    try {
+      await fetch(
+        `/api/crud/detalles_ordenes_produccion?detalle_id=${detalleId}`,
+        {
+          method: "DELETE",
+        }
+      );
+    } catch (error) {
+      console.error("Error al eliminar el detalle:", error);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center z-50">
+      <div className="bg-white p-6 rounded-lg w-full max-w-md shadow-lg">
+        <h2 className="text-xl font-bold mb-4 text-black">
+          Detalles de la Orden
+        </h2>
+
+        <div className="space-y-4 max-h-60 overflow-y-auto text-black">
+          {detalles.length === 0 ? (
+            <p className="text-gray-500">No hay detalles registrados.</p>
+          ) : (
+            detalles.map((detalle, index) => (
+              <div
+                key={detalle.detalle_id ?? index}
+                className="border rounded p-3 bg-gray-50 shadow-sm"
+              >
+                <p>
+                  <strong>Materia:</strong> {ordenes.productos?.nombre}
+                </p>
+                <p>
+                  <strong>Costo Unitario:</strong> ${detalle.costo_unitario}
+                </p>
+                <p>
+                  <strong>Cantidad:</strong> {detalle.cantidad}
+                </p>
+                <p>
+                  <strong>Total:</strong> ${detalle.total}
+                </p>
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={() => handleDeleteDetalle(detalle.detalle_id ?? 0)}
+                    className="bg-red-500 p-2 rounded hover:bg-red-700 text-white transition"
+                  >
+                    <Trash2 />
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        <h3 className="text-lg font-semibold mt-6 text-black">
+          Añadir Nuevo Detalle
+        </h3>
+        <div className="mt-2 space-y-3 text-black">
+          <select
+            name="materia_id"
+            value={nuevaOrden.materia_id}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded text-black"
+          >
+            <option value="">Selecciona una materia prima</option>
+            {materiasPrimas.map((materia) => (
+              <option key={materia.materia_id} value={materia.materia_id}>
+                {materia.nombre} - {materia.descripcion}
+              </option>
+            ))}
+          </select>
+          <input
+            type="number"
+            name="costo_unitario"
+            value={nuevaOrden.costo_unitario}
+            onChange={handleChange}
+            placeholder="Costo Unitario"
+            className="w-full border px-3 py-2 rounded"
+          />
+          <input
+            type="number"
+            name="cantidad"
+            value={nuevaOrden.cantidad}
+            onChange={handleChange}
+            placeholder="Cantidad"
+            className="w-full border px-3 py-2 rounded"
+          />
+          <input
+            type="number"
+            name="total"
+            value={nuevaOrden.total}
+            readOnly
+            className="w-full border px-3 py-2 rounded bg-gray-100 cursor-not-allowed"
+          />
+          <button
+            onClick={handleAddDetalle}
+            className="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700 transition"
+          >
+            Guardar Detalle
+          </button>
+        </div>
+
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 border rounded text-gray-700"
+          >
+            Cerrar
           </button>
         </div>
       </div>
