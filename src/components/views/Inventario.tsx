@@ -1,4 +1,3 @@
-import { movimientos_inventario } from "@prisma/client";
 import {
   Activity,
   ChevronDown,
@@ -722,7 +721,7 @@ function MovimientosModal({
   show: boolean;
   onClose: () => void;
   inventario: Inventario | null;
-  onAddMovimiento?: (nuevoMovimiento: movimientos_inventario) => void;
+  onAddMovimiento?: (nuevoMovimiento: MovimientosInventario) => void;
 }) {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
 
