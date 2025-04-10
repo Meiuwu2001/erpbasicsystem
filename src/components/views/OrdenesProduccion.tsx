@@ -159,7 +159,7 @@ export default function OrdenesProduccion() {
       } else {
         // Si hay un error
         const data = await response.json();
-        showToast.error("¡Hubo un problema al eliminar la orden!", {
+        showToast.error("¡Hubo un problema al elimiar la orden!", {
           duration: 4000,
           progress: true,
           position: "top-right",
