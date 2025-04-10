@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -24,36 +24,36 @@ export async function GET() {
     );
   }
 }
-export async function GET_ONE(req: NextRequest) {
-  const usuario_id = req.nextUrl.searchParams.get("usuario_id");
-  try {
-    const user = await prisma.usuarios.findUnique({
-      where: { usuario_id: Number(usuario_id) },
-      select: {
-        usuario_id: true,
-        nombre: true,
-        apellidos: true,
-        email: true,
-        rol: true,
-      },
-    });
+// export async function GET_ONE(req: NextRequest) {
+//   const usuario_id = req.nextUrl.searchParams.get("usuario_id");
+//   try {
+//     const user = await prisma.usuarios.findUnique({
+//       where: { usuario_id: Number(usuario_id) },
+//       select: {
+//         usuario_id: true,
+//         nombre: true,
+//         apellidos: true,
+//         email: true,
+//         rol: true,
+//       },
+//     });
 
-    if (!user) {
-      return NextResponse.json(
-        { error: "Usuario no encontrado" },
-        { status: 404 }
-      );
-    }
+//     if (!user) {
+//       return NextResponse.json(
+//         { error: "Usuario no encontrado" },
+//         { status: 404 }
+//       );
+//     }
 
-    return NextResponse.json(user, { status: 200 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { error: "Error al obtener el usuario" },
-      { status: 500 }
-    );
-  }
-}
+//     return NextResponse.json(user, { status: 200 });
+//   } catch (error) {
+//     console.error(error);
+//     return NextResponse.json(
+//       { error: "Error al obtener el usuario" },
+//       { status: 500 }
+//     );
+//   }
+// }
 
 export async function PUT(req: NextRequest) {
   const { email, contrasenia, nombre, apellidos, rol } = await req.json();
@@ -118,16 +118,6 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     return new NextResponse(null, { status: 204 });
   } catch (error: unknown) {
     console.error(error);
-
-    // Verificamos si el error es una instancia de PrismaClientKnownRequestError
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { error: "Usuario no encontrado" },
-          { status: 404 }
-        );
-      }
-    }
 
     return NextResponse.json(
       { error: "Error al eliminar el usuario" },

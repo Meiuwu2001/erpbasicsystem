@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@prisma/client";
 import { NextRequest, NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
@@ -88,14 +88,7 @@ export async function DELETE(req: NextRequest) {
     );
   } catch (error) {
     console.error(error);
-    if (error instanceof Prisma.PrismaClientKnownRequestError) {
-      if (error.code === "P2025") {
-        return NextResponse.json(
-          { error: "Registro no encontrado" },
-          { status: 404 }
-        );
-      }
-    }
+
     return NextResponse.json(
       { error: "Error al eliminar el registro" },
       { status: 500 }
