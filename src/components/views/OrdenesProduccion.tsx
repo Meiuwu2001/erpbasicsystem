@@ -104,7 +104,7 @@ export default function OrdenesProduccion() {
     // Creamos la notificación con confirmación
     toast.warning(
       <div>
-        <p>¿Estás seguro de que deseas eliminar esta materia prima?</p>
+        <p>¿Estás seguro de que deseas eliminar esta orden?</p>
         <div className="flex gap-2">
           <button
             onClick={() => {
@@ -147,7 +147,7 @@ export default function OrdenesProduccion() {
 
       if (response.ok) {
         // Si la eliminación es exitosa
-        showToast.success("Materia Prima Eliminada con éxito!", {
+        showToast.success("Orden de Producción Eliminada con éxito!", {
           duration: 4000,
           progress: true,
           position: "top-right",
@@ -159,7 +159,7 @@ export default function OrdenesProduccion() {
       } else {
         // Si hay un error
         const data = await response.json();
-        showToast.error("¡Hubo un problema al eliminar la materia prima!", {
+        showToast.error("¡Hubo un problema al eliminar la orden!", {
           duration: 4000,
           progress: true,
           position: "top-right",
@@ -203,10 +203,10 @@ export default function OrdenesProduccion() {
             fetchOrdenes();
           })
           .catch((err) => {
-            console.error("Error al actualizar maeria:", err);
+            console.error("Error al actualizar materia:", err);
           });
       } catch (error) {
-        console.error("Error al actualizar el materia:", error);
+        console.error("Error al actualizar materia:", error);
       }
     } else {
       console.log("Crear nuevo:", nuevaOrden);
@@ -228,7 +228,7 @@ export default function OrdenesProduccion() {
             console.error("Error al crear materia:", err);
           });
       } catch (error) {
-        console.error("Error al crear el materia:", error);
+        console.error("Error al crear materia:", error);
       }
     }
     setShowAddModal(false);

@@ -118,7 +118,7 @@ export default function Inventario() {
     // Creamos la notificación con confirmación
     toast.warning(
       <div>
-        <p>¿Estás seguro de que deseas eliminar esta materia prima?</p>
+        <p>¿Estás seguro de que deseas eliminar este registro?</p>
         <div className="flex gap-2">
           <button
             onClick={() => {
@@ -157,7 +157,7 @@ export default function Inventario() {
 
       if (response.ok) {
         // Si la eliminación es exitosa
-        showToast.success("Materia Prima Eliminada con éxito!", {
+        showToast.success("Registro Eliminado con éxito!", {
           duration: 4000,
           progress: true,
           position: "top-right",
@@ -169,7 +169,7 @@ export default function Inventario() {
       } else {
         // Si hay un error
         const data = await response.json();
-        showToast.error("¡Hubo un problema al eliminar la materia prima!", {
+        showToast.error("¡Hubo un problema al eliminar el registro!", {
           duration: 4000,
           progress: true,
           position: "top-right",

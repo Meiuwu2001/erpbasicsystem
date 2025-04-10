@@ -169,10 +169,10 @@ export default function MateriasPrimas() {
             fetchMateriasPrimas();
           })
           .catch((err) => {
-            console.error("Error al actualizar maeria:", err);
+            console.error("Error al actualizar materia:", err);
           });
       } catch (error) {
-        console.error("Error al actualizar el materia:", error);
+        console.error("Error al actualizar materia:", error);
       }
     } else {
       console.log("Crear nuevo:", nuevaMateria);
@@ -194,7 +194,7 @@ export default function MateriasPrimas() {
             console.error("Error al crear materia:", err);
           });
       } catch (error) {
-        console.error("Error al crear el materia:", error);
+        console.error("Error al crear materia:", error);
       }
     }
     setShowAddModal(false);
